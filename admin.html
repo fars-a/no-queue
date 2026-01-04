@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - No-Queue</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <nav class="main-nav">
+        <div class="nav-container">
+            <a href="index.html" class="brand">
+                <span>🏛️</span> No-Queue Admin
+            </a>
+            <div class="user-info">
+                <span class="user-name" id="user-name">Admin</span>
+                <button id="logout-btn" class="btn-secondary"
+                    style="padding: 0.5rem 1rem; font-size: 0.9rem;">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-content">
+        <div class="dashboard-grid mb-4">
+            <div class="card stat-card">
+                <h3>Total Tokens</h3>
+                <div id="total-tokens" class="stat-value">0</div>
+                <p>Today</p>
+            </div>
+            <div class="card stat-card">
+                <h3>Active Counters</h3>
+                <div id="active-counters" class="stat-value">0</div>
+                <p>Online</p>
+            </div>
+            <div class="card stat-card">
+                <h3>Avg Wait Time</h3>
+                <div id="avg-wait" class="stat-value">0</div>
+                <p>Minutes</p>
+            </div>
+        </div>
+
+        <div class="dashboard-grid">
+            <!-- Counter Management -->
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h2>Counter Management</h2>
+                </div>
+                <div class="table-container" style="margin-bottom: 1rem;">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Staff ID</th>
+                                <th>Services</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="counters-table">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+                <!-- Add Counter Form -->
+                <form id="add-counter-form"
+                    style="background: var(--bg-color); padding: 1rem; border-radius: var(--radius-md);">
+                    <h4 style="margin-bottom: 0.5rem;">Add New Counter</h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px;">
+                        <input type="text" id="new-counter-name" placeholder="Name (e.g. Counter 3)" required
+                            style="padding: 0.5rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+                        <input type="text" id="new-counter-staff" placeholder="Staff ID" required
+                            style="padding: 0.5rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+                        <button type="submit" class="btn-primary">Add</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Service Management -->
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h2>Service Management</h2>
+                </div>
+                <div class="table-container" style="margin-bottom: 1rem;">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Avg Time</th>
+                                <th>Prefix</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="services-table">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+                <!-- Add Service Form -->
+                <form id="add-service-form"
+                    style="background: var(--bg-color); padding: 1rem; border-radius: var(--radius-md);">
+                    <h4 style="margin-bottom: 0.5rem;">Add New Service</h4>
+                    <div style="display: grid; grid-template-columns: 1fr 80px 60px auto; gap: 10px;">
+                        <input type="text" id="new-service-name" placeholder="Name" required
+                            style="padding: 0.5rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+                        <input type="number" id="new-service-time" placeholder="Mins" required
+                            style="padding: 0.5rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+                        <input type="text" id="new-service-prefix" placeholder="Pre" required maxlength="1"
+                            style="padding: 0.5rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+                        <button type="submit" class="btn-primary">Add</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="dashboard-grid mt-4">
+            <!-- Priority Rules -->
+            <div class="card">
+                <h2>Priority Rules</h2>
+                <p>Configure priority weights for queue sorting.</p>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>Weight (Higher = First)</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Differently Abled</td>
+                                <td><input type="number" value="3" style="width: 60px; padding: 5px;" disabled></td>
+                                <td><span class="status-badge completed">Active</span></td>
+                            </tr>
+                            <tr>
+                                <td>Senior Citizens</td>
+                                <td><input type="number" value="2" style="width: 60px; padding: 5px;" disabled></td>
+                                <td><span class="status-badge completed">Active</span></td>
+                            </tr>
+                            <tr>
+                                <td>Normal</td>
+                                <td><input type="number" value="1" style="width: 60px; padding: 5px;" disabled></td>
+                                <td><span class="status-badge completed">Active</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p style="font-size: 0.8rem; margin-top: 0.5rem; color: var(--text-light);">* Priority logic is
+                    currently hardcoded in system core.</p>
+            </div>
+
+            <!-- All Tokens View -->
+            <div class="card">
+                <h2>All Tokens</h2>
+                <div class="table-container" style="max-height: 300px; overflow-y: auto;">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Token</th>
+                                <th>Service</th>
+                                <th>Status</th>
+                                <th>Wait Time</th>
+                            </tr>
+                        </thead>
+                        <tbody id="all-tokens-table">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mt-4">
+            <h2>System Actions</h2>
+            <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                <button class="btn-danger" id="reset-btn">Reset System Data</button>
+                <button class="btn-secondary" id="export-btn">Export Reports</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            function updateDashboard() {
+                // Stats
+                document.getElementById('total-tokens').textContent = State.tokens.length;
+                document.getElementById('active-counters').textContent = State.counters.length;
+
+                // Calculate Avg Wait
+                const completedTokens = State.tokens.filter(t => t.status === 'completed');
+                document.getElementById('avg-wait').textContent = completedTokens.length > 0 ? '12' : '0';
+
+                // Counters Table
+                const countersBody = document.getElementById('counters-table');
+                if (countersBody) {
+                    countersBody.innerHTML = '';
+                    State.counters.forEach(c => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${c.name}</td>
+                            <td>${c.staffId}</td>
+                            <td>${c.serviceIds.join(', ')}</td>
+                            <td><button class="btn-danger" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;" onclick="deleteCounter(${c.id})">Remove</button></td>
+                        `;
+                        countersBody.appendChild(tr);
+                    });
+                }
+
+                // Services Table
+                const servicesBody = document.getElementById('services-table');
+                if (servicesBody) {
+                    servicesBody.innerHTML = '';
+                    State.services.forEach(s => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${s.name}</td>
+                            <td>${s.avgTime} min</td>
+                            <td>${s.prefix}</td>
+                            <td><button class="btn-danger" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;" onclick="deleteService('${s.id}')">Remove</button></td>
+                        `;
+                        servicesBody.appendChild(tr);
+                    });
+                }
+
+                // All Tokens Table
+                const allTokensBody = document.getElementById('all-tokens-table');
+                if (allTokensBody) {
+                    allTokensBody.innerHTML = '';
+                    // Sort by newest first
+                    const sortedTokens = [...State.tokens].reverse();
+                    sortedTokens.forEach(t => {
+                        const service = State.services.find(s => s.id === t.serviceId);
+                        const serviceName = service ? service.name : t.serviceId;
+                        const waitTime = t.status === 'waiting' ? Math.floor((Date.now() - t.createdAt) / 60000) + ' min' : '-';
+
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${t.number}</td>
+                            <td>${serviceName}</td>
+                            <td><span class="status-badge ${t.status === 'called' ? 'called' : (t.status === 'completed' ? 'completed' : 'waiting')}">${t.status}</span></td>
+                            <td>${waitTime}</td>
+                        `;
+                        allTokensBody.appendChild(tr);
+                    });
+                }
+            }
+
+            // Add Counter
+            document.getElementById('add-counter-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const name = document.getElementById('new-counter-name').value;
+                const staffId = document.getElementById('new-counter-staff').value;
+
+                const newCounter = {
+                    id: Date.now(),
+                    name: name,
+                    staffId: staffId,
+                    currentToken: null,
+                    serviceIds: State.services.map(s => s.id) // Default to all services for now
+                };
+
+                State.counters.push(newCounter);
+                State.save();
+                e.target.reset();
+                updateDashboard();
+            });
+
+            // Add Service
+            document.getElementById('add-service-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const name = document.getElementById('new-service-name').value;
+                const time = document.getElementById('new-service-time').value;
+                const prefix = document.getElementById('new-service-prefix').value.toUpperCase();
+                const id = prefix.toLowerCase() + Date.now().toString().slice(-4); // Unique ID
+
+                const newService = {
+                    id: id,
+                    name: name,
+                    avgTime: parseInt(time),
+                    prefix: prefix
+                };
+
+                State.services.push(newService);
+                State.save();
+                e.target.reset();
+                updateDashboard();
+            });
+
+            // Delete Handlers (Global scope for onclick)
+            window.deleteCounter = (id) => {
+                if (confirm('Delete this counter?')) {
+                    State.counters = State.counters.filter(c => c.id !== id);
+                    State.save();
+                    updateDashboard();
+                }
+            };
+
+            window.deleteService = (id) => {
+                if (confirm('Delete this service?')) {
+                    State.services = State.services.filter(s => s.id !== id);
+                    State.save();
+                    updateDashboard();
+                }
+            };
+
+            document.getElementById('reset-btn').addEventListener('click', () => {
+                if (confirm("Are you sure you want to clear all data? This cannot be undone.")) {
+                    localStorage.clear();
+                    location.reload();
+                }
+            });
+
+            document.getElementById('export-btn').addEventListener('click', () => {
+                alert("Exporting data to CSV...");
+            });
+
+            // Initial Load
+            updateDashboard();
+            setInterval(updateDashboard, 5000);
+        });
+    </script>
+</body>
+
+</html>

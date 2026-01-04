@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Dashboard - No-Queue</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <nav class="main-nav">
+        <div class="nav-container">
+            <a href="index.html" class="brand">
+                <span>🏛️</span> No-Queue Staff
+            </a>
+            <div class="user-info">
+                <span class="user-name" id="user-name">Staff</span>
+                <button id="logout-btn" class="btn-secondary"
+                    style="padding: 0.5rem 1rem; font-size: 0.9rem;">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-content">
+        <div class="card mb-4">
+            <div
+                style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                <div>
+                    <h2>Counter Control</h2>
+                    <p>Manage your counter and call tokens.</p>
+                </div>
+                <div class="form-group" style="margin-bottom: 0; width: 200px;">
+                    <select id="counter-select">
+                        <option value="">Select Counter</option>
+                        <!-- Populated by JS -->
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard-grid">
+            <div class="card stat-card">
+                <h3>Current Token</h3>
+                <div id="current-token" class="stat-value">-</div>
+                <div style="margin-top: 1rem; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                    <button id="call-btn" class="btn-primary" disabled>Call Next</button>
+                    <button id="complete-btn" class="btn-success" disabled>Complete</button>
+                </div>
+
+                <!-- Transfer Section -->
+                <div id="transfer-section"
+                    style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color); display: none;">
+                    <p style="font-size: 0.9rem; margin-bottom: 0.5rem;">Transfer to another
+                        service:</p>
+                    <div style="display: flex; gap: 5px;">
+                        <select id="transfer-service"
+                            style="padding: 0.5rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); flex: 1;">
+                            <!-- Populated by JS -->
+                        </select>
+                        <button id="transfer-btn" class="btn-secondary" style="padding: 0.5rem;">Transfer</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Waiting List</h3>
+                <div class="table-container" style="max-height: 300px; overflow-y: auto;">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Token</th>
+                                <th>Priority</th>
+                                <th>Wait Time</th>
+                            </tr>
+                        </thead>
+                        <tbody id="waiting-list">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const counterSelect = document.getElementById('counter-select');
+            const callBtn = document.getElementById('call-btn');
+            const completeBtn = document.getElementById('complete-btn');
+            const transferSection = document.getElementById('transfer-section');
+            const transferServiceSelect = document.getElementById('transfer-service');
+            const transferBtn = document.getElementById('transfer-btn');
+
+            let currentCounterId = null;
+
+            // Populate Counters
+            if (State.counters) {
+                State.counters.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c.id;
+                    opt.textContent = c.name;
+                    counterSelect.appendChild(opt);
+                });
+            }
+
+            // Populate Transfer Services
+            if (State.services) {
+                State.services.forEach(s => {
+                    const opt = document.createElement('option');
+                    opt.value = s.id;
+                    opt.textContent = s.name;
+                    transferServiceSelect.appendChild(opt);
+                });
+            }
+
+            // Auto-select Counter for Staff
+            if (State.currentUser && State.currentUser.role === 'staff') {
+                const assignedCounter = State.getCounterForStaff(State.currentUser.username);
+                if (assignedCounter) {
+                    counterSelect.value = assignedCounter.id;
+                    currentCounterId = assignedCounter.id;
+                    counterSelect.disabled = true; // Lock selection
+                    // Add visual indicator
+                    const infoDiv = document.querySelector('.card.mb-4 div');
+                    if (infoDiv) {
+                        const badge = document.createElement('span');
+                        badge.className = 'status-badge completed';
+                        badge.textContent = 'Assigned to You';
+                        badge.style.marginLeft = '10px';
+                        infoDiv.querySelector('h2').appendChild(badge);
+                    }
+                }
+            }
+
+            counterSelect.addEventListener('change', (e) => {
+                currentCounterId = e.target.value;
+                updateDashboard();
+            });
+
+            callBtn.addEventListener('click', () => {
+                if (!currentCounterId) return;
+                const nextToken = State.getNextTokenForCounter(currentCounterId);
+                if (nextToken) {
+                    State.callToken(currentCounterId, nextToken.id);
+                    updateDashboard();
+                } else {
+                    alert("No tokens waiting for this counter.");
+                }
+            });
+
+            completeBtn.addEventListener('click', () => {
+                if (!currentCounterId) return;
+                const result = State.completeToken(currentCounterId);
+                if (result.success) {
+                    if (result.action === 'transferred') {
+                        alert(`Token forwarded to ${result.target}`);
+                    }
+                    updateDashboard();
+                }
+            });
+
+            transferBtn.addEventListener('click', () => {
+                if (!currentCounterId) return;
+                const targetService = transferServiceSelect.value;
+                if (State.transferToken(currentCounterId, targetService)) {
+                    alert("Token transferred successfully!");
+                    updateDashboard();
+                }
+            });
+
+            function updateDashboard() {
+                if (!currentCounterId) {
+                    callBtn.disabled = true;
+                    completeBtn.disabled = true;
+                    transferSection.style.display = 'none';
+                    document.getElementById('current-token').textContent = '-';
+                    document.getElementById('waiting-list').innerHTML = '';
+                    return;
+                }
+
+                const counter = State.counters.find(c => c.id == currentCounterId);
+
+                // Update Current Token
+                if (counter.currentToken) {
+                    document.getElementById('current-token').textContent = counter.currentToken.number;
+                    callBtn.disabled = true;
+                    completeBtn.disabled = false;
+                    transferSection.style.display = 'block';
+                } else {
+                    document.getElementById('current-token').textContent = 'Free';
+                    callBtn.disabled = false;
+                    completeBtn.disabled = true;
+                    transferSection.style.display = 'none';
+                }
+
+                // Update Waiting List
+                const tbody = document.getElementById('waiting-list');
+                tbody.innerHTML = '';
+
+                const waitingTokens = State.tokens.filter(t =>
+                    counter.serviceIds.includes(t.serviceId) && t.status === 'waiting'
+                ).sort((a, b) => {
+                    // Simple priority sort
+                    const pMap = { 'disabled': 0, 'senior': 1, 'normal': 2 };
+                    return pMap[a.priority] - pMap[b.priority];
+                });
+
+                waitingTokens.forEach(t => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${t.number}</td>
+                        <td><span class="status-badge" style="background: #eee;">${t.priority}</span></td>
+                        <td>${Math.floor((Date.now() - t.createdAt) / 60000)} min</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+
+            // Poll
+            setInterval(updateDashboard, 5000);
+
+            // Initial update if auto-selected
+            if (currentCounterId) updateDashboard();
+        });
+    </script>
+</body>
+
+</html>

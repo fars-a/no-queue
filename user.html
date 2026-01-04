@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Dashboard - No-Queue</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <nav class="main-nav">
+        <div class="nav-container">
+            <a href="index.html" class="brand">
+                <span>🏛️</span> No-Queue
+            </a>
+            <div class="user-info">
+                <span class="user-name" id="user-name">User</span>
+                <button id="logout-btn" class="btn-secondary"
+                    style="padding: 0.5rem 1rem; font-size: 0.9rem;">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-content">
+        <div class="dashboard-grid mb-4">
+            <div class="card stat-card">
+                <h3>Current Token</h3>
+                <div id="current-token-display" class="stat-value">-</div>
+                <p id="token-status-text">No active token</p>
+            </div>
+            <div class="card stat-card">
+                <h3>People Ahead</h3>
+                <div id="people-ahead-display" class="stat-value">-</div>
+                <p>Waiting</p>
+            </div>
+            <div class="card stat-card">
+                <h3>Estimated Wait</h3>
+                <div id="wait-time-display" class="stat-value">-</div>
+                <div id="arrival-time-display"
+                    style="font-size: 0.9rem; color: var(--primary-color); margin-top: 0.5rem; font-weight: 600;"></div>
+            </div>
+        </div>
+
+        <div class="dashboard-grid">
+            <div class="card">
+                <h2>New Token</h2>
+                <p>Join the queue for <strong>Counter 1</strong>.</p>
+                <form id="token-form">
+                    <!-- Service selection removed, defaults to Counter 1 -->
+                    <div class="form-group">
+                        <label for="priority">Priority Category</label>
+                        <select id="priority">
+                            <option value="normal">Normal</option>
+                            <option value="senior">Senior Citizen</option>
+                            <option value="disabled">Differently Abled</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-primary full-width">Generate Token</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h2>Virtual Queue</h2>
+                <p>Live waiting list for <span id="queue-name">Counter 1</span></p>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Token</th>
+                                <th>Priority</th>
+                                <th>Wait Time</th>
+                            </tr>
+                        </thead>
+                        <tbody id="virtual-queue-body">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mt-4">
+            <h2>Quick Actions</h2>
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                <button class="btn-secondary">Update Profile</button>
+                <button class="btn-secondary">View Notifications</button>
+                <button class="btn-secondary">Contact Support</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const queueNameEl = document.getElementById('queue-name');
+
+            // Handle Token Generation
+            document.getElementById('token-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                // Hardcoded to 'c1' (Counter 1) as per request
+                const serviceId = 'c1';
+                const priority = document.getElementById('priority').value;
+
+                // Use current user's phone or a placeholder if somehow missing
+                const phone = State.currentUser ? State.currentUser.phone : '0000000000';
+
+                const token = State.generateToken(serviceId, priority, phone);
+                alert(`Token Generated: ${token.number}`);
+                updateDashboard();
+            });
+
+            function updateDashboard() {
+                if (!State.currentUser) return;
+
+                // 1. Find Active Token
+                const activeToken = State.tokens.slice().reverse().find(t =>
+                    (t.userId === State.currentUser.id || t.phone === State.currentUser.phone) &&
+                    t.status !== 'completed'
+                );
+
+                // Determine which service queue to show
+                // Default to 'c1' (Counter 1) if no active token, or show the active token's service
+                let targetServiceId = 'c1';
+                if (activeToken) {
+                    targetServiceId = activeToken.serviceId;
+                }
+
+                const targetService = State.services.find(s => s.id === targetServiceId);
+                if (targetService) queueNameEl.textContent = targetService.name;
+
+                // 2. Update Top Stats
+                if (activeToken) {
+                    document.getElementById('current-token-display').textContent = activeToken.number;
+                    document.getElementById('token-status-text').textContent = `Status: ${activeToken.status.toUpperCase()}`;
+
+                    // Pass activeToken.id to calculate wait time correctly (only people ahead)
+                    const waitTime = State.calculateWaitTime(activeToken.serviceId, activeToken.id);
+                    document.getElementById('wait-time-display').textContent = waitTime + " min";
+
+                    // Calculate people ahead strictly
+                    let peopleAhead = 0;
+                    const waitingTokens = State.tokens.filter(t => t.serviceId === activeToken.serviceId && t.status === 'waiting');
+                    if (activeToken.status === 'waiting') {
+                        peopleAhead = waitingTokens.filter(t => t.createdAt < activeToken.createdAt).length;
+                    } else {
+                        // If called, 0 people ahead
+                        peopleAhead = 0;
+                    }
+                    document.getElementById('people-ahead-display').textContent = peopleAhead;
+
+                    // Arrival Time Calculation
+                    const arrivalTime = new Date(Date.now() + waitTime * 60000);
+                    const timeString = arrivalTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    document.getElementById('arrival-time-display').textContent = `Be there by: ${timeString}`;
+                } else {
+                    document.getElementById('current-token-display').textContent = '-';
+                    document.getElementById('token-status-text').textContent = 'No active token';
+                    document.getElementById('wait-time-display').textContent = '-';
+                    document.getElementById('people-ahead-display').textContent = '-';
+                    document.getElementById('arrival-time-display').textContent = '';
+                }
+
+                // 3. Update Virtual Queue Table
+                const tbody = document.getElementById('virtual-queue-body');
+                if (tbody) {
+                    tbody.innerHTML = '';
+
+                    // Filter tokens for the target service that are waiting
+                    const queueTokens = State.tokens.filter(t =>
+                        t.serviceId === targetServiceId && t.status === 'waiting'
+                    );
+
+                    if (queueTokens.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Queue is empty</td></tr>';
+                    } else {
+                        queueTokens.forEach(t => {
+                            const isMyToken = activeToken && t.id === activeToken.id;
+                            const tr = document.createElement('tr');
+
+                            // Highlight Logic: Light Blue for current user
+                            if (isMyToken) {
+                                tr.style.backgroundColor = 'lightblue';
+                                tr.style.fontWeight = '600';
+                            }
+
+                            // Calculate wait for this specific token in the list
+                            // Note: This is just "time since created", not "time until served"
+                            // User asked for "Wait Time" column. Usually this means "How long have I been waiting".
+                            // But for "Virtual Queue" it might mean "Est. Wait". 
+                            // Let's stick to "Time since created" for the table to avoid confusion, 
+                            // or we can show "Est Wait" for everyone. 
+                            // The previous implementation showed "Time since created". I'll keep that but label it clearly if needed.
+                            // Actually, let's use the new calculateWaitTime for everyone to be super cool.
+                            const estWait = State.calculateWaitTime(targetServiceId, t.id);
+
+                            tr.innerHTML = `
+                                <td>${t.number} ${isMyToken ? '(You)' : ''}</td>
+                                <td>${t.priority}</td>
+                                <td>${estWait} min</td>
+                            `;
+                            tbody.appendChild(tr);
+                        });
+                    }
+                }
+            }
+
+            // Initial Update
+            updateDashboard();
+
+            // Poll for updates every 5 seconds
+            setInterval(updateDashboard, 5000);
+        });
+    </script>
+</body>
+
+</html>

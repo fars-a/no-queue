@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Public Display - No-Queue</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <nav class="main-nav">
+        <div class="nav-container">
+            <a href="index.html" class="brand">
+                <span>🏛️</span> No-Queue Display
+            </a>
+            <div class="user-info">
+                <span id="clock" style="font-weight: 600; font-size: 1.2rem;">00:00:00</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-content">
+        <div class="display-container" id="display-grid">
+            <!-- Populated by JS -->
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            function updateDisplay() {
+                const container = document.getElementById('display-grid');
+                container.innerHTML = '';
+
+                // Show all counters
+                State.counters.forEach(c => {
+                    const card = document.createElement('div');
+                    card.className = 'display-card';
+
+                    const tokenNumber = c.currentToken ? c.currentToken.number : '---';
+                    const statusClass = c.currentToken ? 'called' : 'waiting';
+
+                    card.innerHTML = `
+                        <div class="display-token" style="${c.currentToken ? 'color: var(--primary-color);' : 'color: #ccc;'}">
+                            ${tokenNumber}
+                        </div>
+                        <div class="display-counter">
+                            ${c.name}
+                        </div>
+                        <div style="margin-top: 1rem;">
+                            <span class="status-badge ${statusClass}">${c.currentToken ? 'Now Serving' : 'Open'}</span>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+
+                // Add Waiting List Section
+                const waitingContainer = document.createElement('div');
+                waitingContainer.className = 'card';
+                waitingContainer.style.gridColumn = '1 / -1';
+                waitingContainer.style.marginTop = '2rem';
+
+                const waitingTokens = State.tokens.filter(t => t.status === 'waiting').slice(0, 10); // Show top 10
+
+                let waitingHtml = '<h2 style="margin-bottom: 1rem;">Up Next</h2><div style="display: flex; gap: 1rem; flex-wrap: wrap;">';
+                if (waitingTokens.length === 0) {
+                    waitingHtml += '<p>No tokens waiting.</p>';
+                } else {
+                    waitingTokens.forEach(t => {
+                        waitingHtml += `<div style="background: var(--bg-color); padding: 0.5rem 1rem; border-radius: var(--radius-sm); font-weight: 600; font-size: 1.2rem; border: 1px solid var(--border-color);">${t.number}</div>`;
+                    });
+                }
+                waitingHtml += '</div>';
+
+                waitingContainer.innerHTML = waitingHtml;
+                container.appendChild(waitingContainer);
+            }
+
+            function updateClock() {
+                const now = new Date();
+                document.getElementById('clock').textContent = now.toLocaleTimeString();
+            }
+
+            updateDisplay();
+            setInterval(updateDisplay, 2000); // Fast poll for display
+            setInterval(updateClock, 1000);
+        });
+    </script>
+</body>
+
+</html>
