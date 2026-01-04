@@ -49,16 +49,22 @@
         <div class="dashboard-grid">
             <div class="card">
                 <h2>New Token</h2>
+                <div id="system-closed-msg"
+                    style="display: none; background: #ffebee; color: #c62828; padding: 1rem; border-radius: var(--radius-sm); margin-bottom: 1rem;">
+                    <strong>System Closed</strong><br>Token generation is currently disabled.
+                </div>
                 <p>Join the queue for <strong>Counter 1</strong>.</p>
                 <form id="token-form">
                     <!-- Service selection removed, defaults to Counter 1 -->
                     <div class="form-group">
                         <label for="priority">Priority Category</label>
                         <select id="priority">
-                            <option value="normal">Normal</option>
-                            <option value="senior">Senior Citizen</option>
-                            <option value="disabled">Differently Abled</option>
+                            <!-- Populated by JS -->
                         </select>
+                    </div>
+                    <div id="pre-wait-display"
+                        style="margin-bottom: 1rem; color: var(--text-light); font-size: 0.9rem;">
+                        Estimated Wait: <strong>- min</strong>
                     </div>
                     <button type="submit" class="btn-primary full-width">Generate Token</button>
                 </form>
@@ -98,10 +104,55 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const queueNameEl = document.getElementById('queue-name');
+            const prioritySelect = document.getElementById('priority');
+            const preWaitDisplay = document.getElementById('pre-wait-display');
+
+            // Dynamic Priority Population
+            function populatePriorities() {
+                // Sort by weight ascending (so Normal is first, usually) or however user prefers
+                // Usually dropdowns might want 'Normal' first.
+                // Let's sort by weight ascending (1 -> 2 -> 3)
+                const sorted = [...State.priorities].sort((a, b) => a.weight - b.weight);
+                const currentVal = prioritySelect.value;
+                prioritySelect.innerHTML = '';
+
+                sorted.forEach(p => {
+                    const opt = document.createElement('option');
+                    opt.value = p.id;
+                    opt.textContent = p.name;
+                    prioritySelect.appendChild(opt);
+                });
+
+                // Restore previous selection if still exists
+                if (currentVal && State.priorities.find(p => p.id === currentVal)) {
+                    prioritySelect.value = currentVal;
+                }
+            }
+
+            // Initial Populate
+            populatePriorities();
+
+
+
+            // Handle Priority Change for Estimate
+            prioritySelect.addEventListener('change', updatePreWaitEstimate);
+
+            function updatePreWaitEstimate() {
+                const serviceId = 'c1'; // Hardcoded
+                const priority = prioritySelect.value;
+                const estWait = State.calculateWaitTime(serviceId, null, priority);
+                preWaitDisplay.innerHTML = `Estimated Wait: <strong>${estWait} min</strong>`;
+            }
 
             // Handle Token Generation
             document.getElementById('token-form').addEventListener('submit', (e) => {
                 e.preventDefault();
+
+                if (State.systemStatus === 'CLOSED') {
+                    alert("System is currently CLOSED. Please wait for staff to open the day.");
+                    return;
+                }
+
                 // Hardcoded to 'c1' (Counter 1) as per request
                 const serviceId = 'c1';
                 const priority = document.getElementById('priority').value;
@@ -110,11 +161,18 @@
                 const phone = State.currentUser ? State.currentUser.phone : '0000000000';
 
                 const token = State.generateToken(serviceId, priority, phone);
-                alert(`Token Generated: ${token.number}`);
+                if (token.error) {
+                    alert(token.error);
+                } else {
+                    alert(`Token Generated: ${token.number}`);
+                }
                 updateDashboard();
             });
 
             function updateDashboard() {
+                // RELOAD STATE to pick up changes from other tabs (like Open/Close Day)
+                State.load();
+
                 if (!State.currentUser) return;
 
                 // 1. Find Active Token
@@ -188,14 +246,6 @@
                                 tr.style.fontWeight = '600';
                             }
 
-                            // Calculate wait for this specific token in the list
-                            // Note: This is just "time since created", not "time until served"
-                            // User asked for "Wait Time" column. Usually this means "How long have I been waiting".
-                            // But for "Virtual Queue" it might mean "Est. Wait". 
-                            // Let's stick to "Time since created" for the table to avoid confusion, 
-                            // or we can show "Est Wait" for everyone. 
-                            // The previous implementation showed "Time since created". I'll keep that but label it clearly if needed.
-                            // Actually, let's use the new calculateWaitTime for everyone to be super cool.
                             const estWait = State.calculateWaitTime(targetServiceId, t.id);
 
                             tr.innerHTML = `
@@ -207,13 +257,29 @@
                         });
                     }
                 }
+
+                // System Status Check
+                const formBtn = document.querySelector('#token-form button');
+                const closedMsg = document.getElementById('system-closed-msg');
+
+                if (State.systemStatus === 'CLOSED') {
+                    if (formBtn) formBtn.disabled = true;
+                    if (closedMsg) closedMsg.style.display = 'block';
+                } else {
+                    if (formBtn) formBtn.disabled = false;
+                    if (closedMsg) closedMsg.style.display = 'none';
+                }
             }
 
             // Initial Update
             updateDashboard();
+            updatePreWaitEstimate();
 
             // Poll for updates every 5 seconds
-            setInterval(updateDashboard, 5000);
+            setInterval(() => {
+                updateDashboard();
+                updatePreWaitEstimate();
+            }, 5000);
         });
     </script>
 </body>

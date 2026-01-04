@@ -66,92 +66,91 @@
                         </tbody>
                     </table>
                 </div>
-                <!-- Add Counter Form -->
-                <form id="add-counter-form"
-                    style="background: var(--bg-color); padding: 1rem; border-radius: var(--radius-md);">
-                    <h4 style="margin-bottom: 0.5rem;">Add New Counter</h4>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px;">
-                        <input type="text" id="new-counter-name" placeholder="Name (e.g. Counter 3)" required
-                            style="padding: 0.5rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
-                        <input type="text" id="new-counter-staff" placeholder="Staff ID" required
-                            style="padding: 0.5rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
-                        <button type="submit" class="btn-primary">Add</button>
-                    </div>
-                </form>
+
+                <!-- Add Counter Form (Merged) -->
+                <div style="border-top: 1px solid var(--border-color); padding-top: 1rem;">
+                    <h4
+                        style="margin-bottom: 0.5rem; font-size: 0.9rem; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.5px;">
+                        Add New Counter</h4>
+                    <form id="add-counter-form">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; align-items: end;">
+                            <div class="form-group" style="margin-bottom:0;">
+                                <input type="text" id="new-counter-name" placeholder="Counter Name" required
+                                    style="padding: 0.5rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); width: 100%;">
+                            </div>
+                            <div class="form-group" style="margin-bottom:0;">
+                                <select id="new-counter-staff" required
+                                    style="padding: 0.5rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); width: 100%;">
+                                    <option value="">Select Staff</option>
+                                    <!-- Populated by JS -->
+                                </select>
+                            </div>
+                            <button type="submit" class="btn-primary" style="height: 38px;">Add</button>
+                        </div>
+                    </form>
+                </div>
             </div>
 
-            <!-- Service Management -->
-            <div class="card">
+            <!-- Staff Management -->
+            <div class="card mt-4">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                    <h2>Service Management</h2>
+                    <h2>Staff Management</h2>
                 </div>
-                <div class="table-container" style="margin-bottom: 1rem;">
+                <div class="table-container">
                     <table class="data-table">
                         <thead>
                             <tr>
                                 <th>Name</th>
-                                <th>Avg Time</th>
-                                <th>Prefix</th>
+                                <th>Username</th>
+                                <th>Status</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
-                        <tbody id="services-table">
+                        <tbody id="staff-table">
                             <!-- Populated by JS -->
                         </tbody>
                     </table>
                 </div>
-                <!-- Add Service Form -->
-                <form id="add-service-form"
-                    style="background: var(--bg-color); padding: 1rem; border-radius: var(--radius-md);">
-                    <h4 style="margin-bottom: 0.5rem;">Add New Service</h4>
-                    <div style="display: grid; grid-template-columns: 1fr 80px 60px auto; gap: 10px;">
-                        <input type="text" id="new-service-name" placeholder="Name" required
-                            style="padding: 0.5rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
-                        <input type="number" id="new-service-time" placeholder="Mins" required
-                            style="padding: 0.5rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
-                        <input type="text" id="new-service-prefix" placeholder="Pre" required maxlength="1"
-                            style="padding: 0.5rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
-                        <button type="submit" class="btn-primary">Add</button>
-                    </div>
-                </form>
             </div>
+
+
+
         </div>
 
         <div class="dashboard-grid mt-4">
             <!-- Priority Rules -->
             <div class="card">
-                <h2>Priority Rules</h2>
-                <p>Configure priority weights for queue sorting.</p>
-                <div class="table-container">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h2>Priority Rules</h2>
+                </div>
+                <p>Configure priority weights for queue sorting. Higher weight = Higher priority.</p>
+                <div class="table-container" style="margin-bottom: 1rem;">
                     <table class="data-table">
                         <thead>
                             <tr>
                                 <th>Category</th>
-                                <th>Weight (Higher = First)</th>
-                                <th>Status</th>
+                                <th>Weight</th>
+                                <th>Action</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <tr>
-                                <td>Differently Abled</td>
-                                <td><input type="number" value="3" style="width: 60px; padding: 5px;" disabled></td>
-                                <td><span class="status-badge completed">Active</span></td>
-                            </tr>
-                            <tr>
-                                <td>Senior Citizens</td>
-                                <td><input type="number" value="2" style="width: 60px; padding: 5px;" disabled></td>
-                                <td><span class="status-badge completed">Active</span></td>
-                            </tr>
-                            <tr>
-                                <td>Normal</td>
-                                <td><input type="number" value="1" style="width: 60px; padding: 5px;" disabled></td>
-                                <td><span class="status-badge completed">Active</span></td>
-                            </tr>
+                        <tbody id="priorities-table">
+                            <!-- Populated by JS -->
                         </tbody>
                     </table>
                 </div>
-                <p style="font-size: 0.8rem; margin-top: 0.5rem; color: var(--text-light);">* Priority logic is
-                    currently hardcoded in system core.</p>
+
+                <!-- Add Priority Form -->
+                <form id="add-priority-form"
+                    style="background: var(--bg-color); padding: 1rem; border-radius: var(--radius-md);">
+                    <h4 style="margin-bottom: 0.5rem;">Add New Priority</h4>
+                    <div style="display: grid; grid-template-columns: 1fr 80px auto; gap: 10px;">
+                        <input type="text" id="new-priority-name" placeholder="Name (e.g. VIP)" required
+                            style="padding: 0.5rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+                        <input type="number" id="new-priority-weight" placeholder="Wght" required min="1"
+                            style="padding: 0.5rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+                        <button type="submit" class="btn-primary">Add</button>
+                    </div>
+                </form>
             </div>
 
             <!-- All Tokens View -->
@@ -176,6 +175,18 @@
         </div>
 
         <div class="card mt-4">
+            <h2>System Settings</h2>
+            <form id="settings-form" style="margin-top: 1rem; display: flex; gap: 1rem; align-items: end;">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="initial-buffer">Initial Wait Buffer (Minutes)</label>
+                    <input type="number" id="initial-buffer" min="0" value="10"
+                        style="padding: 0.5rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); width: 100px;">
+                </div>
+                <button type="submit" class="btn-primary">Save Settings</button>
+            </form>
+        </div>
+
+        <div class="card mt-4">
             <h2>System Actions</h2>
             <div style="display: flex; gap: 1rem; margin-top: 1rem;">
                 <button class="btn-danger" id="reset-btn">Reset System Data</button>
@@ -186,144 +197,240 @@
 
     <script src="script.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            function updateDashboard() {
-                // Stats
-                document.getElementById('total-tokens').textContent = State.tokens.length;
-                document.getElementById('active-counters').textContent = State.counters.length;
+        // Initialize Immediately (Script is at end of body)
+        if (typeof State !== 'undefined') {
+            State.init();
+        }
 
-                // Calculate Avg Wait
-                const completedTokens = State.tokens.filter(t => t.status === 'completed');
-                document.getElementById('avg-wait').textContent = completedTokens.length > 0 ? '12' : '0';
+        // Start Dashboard Loop
+        setInterval(updateDashboard, 5000);
+        updateDashboard(); // First run
 
-                // Counters Table
-                const countersBody = document.getElementById('counters-table');
-                if (countersBody) {
-                    countersBody.innerHTML = '';
-                    State.counters.forEach(c => {
-                        const tr = document.createElement('tr');
-                        tr.innerHTML = `
+        function updateDashboard() {
+            // Stats
+            document.getElementById('total-tokens').textContent = State.tokens.length;
+            document.getElementById('active-counters').textContent = State.counters.length;
+
+            // Calculate Avg Wait
+            const completedTokens = State.tokens.filter(t => t.status === 'completed');
+            document.getElementById('avg-wait').textContent = completedTokens.length > 0 ? '12' : '0';
+
+            // Counters Table
+            const countersBody = document.getElementById('counters-table');
+            if (countersBody) {
+                countersBody.innerHTML = '';
+                State.counters.forEach(c => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
                             <td>${c.name}</td>
                             <td>${c.staffId}</td>
                             <td>${c.serviceIds.join(', ')}</td>
                             <td><button class="btn-danger" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;" onclick="deleteCounter(${c.id})">Remove</button></td>
                         `;
-                        countersBody.appendChild(tr);
-                    });
-                }
+                    countersBody.appendChild(tr);
+                });
+            }
 
-                // Services Table
-                const servicesBody = document.getElementById('services-table');
-                if (servicesBody) {
-                    servicesBody.innerHTML = '';
-                    State.services.forEach(s => {
-                        const tr = document.createElement('tr');
-                        tr.innerHTML = `
-                            <td>${s.name}</td>
-                            <td>${s.avgTime} min</td>
-                            <td>${s.prefix}</td>
-                            <td><button class="btn-danger" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;" onclick="deleteService('${s.id}')">Remove</button></td>
+            // Priorities Table
+            const prioritiesBody = document.getElementById('priorities-table');
+            if (prioritiesBody) {
+                prioritiesBody.innerHTML = '';
+                // Sort by Weight Descending
+                const sortedPriorities = [...State.priorities].sort((a, b) => b.weight - a.weight);
+
+                sortedPriorities.forEach(p => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                            <td>${p.name}</td>
+                            <td><span class="status-badge" style="background:var(--bg-color); color:var(--text-color); border:1px solid var(--border-color);">${p.weight}</span></td>
+                            <td><button class="btn-danger" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;" onclick="deletePriority('${p.id}')">Remove</button></td>
                         `;
-                        servicesBody.appendChild(tr);
-                    });
-                }
+                    prioritiesBody.appendChild(tr);
+                });
+            }
 
-                // All Tokens Table
-                const allTokensBody = document.getElementById('all-tokens-table');
-                if (allTokensBody) {
-                    allTokensBody.innerHTML = '';
-                    // Sort by newest first
-                    const sortedTokens = [...State.tokens].reverse();
-                    sortedTokens.forEach(t => {
-                        const service = State.services.find(s => s.id === t.serviceId);
-                        const serviceName = service ? service.name : t.serviceId;
-                        const waitTime = t.status === 'waiting' ? Math.floor((Date.now() - t.createdAt) / 60000) + ' min' : '-';
+            // All Tokens Table
+            const allTokensBody = document.getElementById('all-tokens-table');
+            if (allTokensBody) {
+                allTokensBody.innerHTML = '';
+                // Sort by newest first
+                const sortedTokens = [...State.tokens].reverse();
+                sortedTokens.forEach(t => {
+                    const service = State.services.find(s => s.id === t.serviceId);
+                    const serviceName = service ? service.name : t.serviceId;
+                    // Use Estimated Wait Time instead of Elapsed Time
+                    const waitTime = t.status === 'waiting' ? State.calculateWaitTime(t.serviceId, t.id) + ' min' : '-';
 
-                        const tr = document.createElement('tr');
-                        tr.innerHTML = `
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
                             <td>${t.number}</td>
                             <td>${serviceName}</td>
                             <td><span class="status-badge ${t.status === 'called' ? 'called' : (t.status === 'completed' ? 'completed' : 'waiting')}">${t.status}</span></td>
                             <td>${waitTime}</td>
                         `;
-                        allTokensBody.appendChild(tr);
+                    allTokensBody.appendChild(tr);
+                });
+            }
+            // Staff Table calling logic
+
+
+            // Staff Table Logic Update
+            const staffBody = document.getElementById('staff-table');
+            if (staffBody) {
+                staffBody.innerHTML = '';
+                const staffUsers = State.users.filter(u => u.role === 'staff');
+                if (staffUsers.length === 0) {
+                    staffBody.innerHTML = '<tr><td colspan="4" style="text-align:center">No staff registered</td></tr>';
+                } else {
+                    staffUsers.forEach(u => {
+                        const isActive = u.active !== false;
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                                <td>${u.name || u.username}</td>
+                                <td>${u.username}</td>
+                                <td><span class="status-badge ${isActive ? 'completed' : 'waiting'}">${isActive ? 'Active' : 'Disabled'}</span></td>
+                                <td>
+                                    <button class="${isActive ? 'btn-danger' : 'btn-success'}" 
+                                        style="padding: 0.25rem 0.5rem; font-size: 0.8rem;" 
+                                        onclick="toggleStaff('${u.id}', ${!isActive})">
+                                        ${isActive ? 'Disable' : 'Enable'}
+                                    </button>
+                                </td>
+                            `;
+                        staffBody.appendChild(tr);
                     });
                 }
+
+
+                // Populate Staff Dropdown for New Counter
+                const staffSelect = document.getElementById('new-counter-staff');
+                if (staffSelect) {
+                    // Only repopulate if empty (or could keep overwriting, but that loses selection if form open)
+                    // Actually, existing logic repopulated every update. I'll stick to that to respond to staff changes.
+                    // But wait, if I am typing/selecting and it refreshes, it resets.
+                    // Better to check if options length differs or just leave it for now (prototype).
+                    const currentVal = staffSelect.value;
+                    staffSelect.innerHTML = '<option value="">Select Staff</option>';
+                    const activeStaff = State.getActiveStaff();
+                    activeStaff.forEach(s => {
+                        const opt = document.createElement('option');
+                        opt.value = s.username;
+                        opt.textContent = `${s.name || s.username} (${s.username})`;
+                        staffSelect.appendChild(opt);
+                    });
+                    if (currentVal) staffSelect.value = currentVal;
+                }
+            }
+        }
+
+        // Add Counter
+        document.getElementById('add-counter-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const name = document.getElementById('new-counter-name').value;
+            const staffId = document.getElementById('new-counter-staff').value;
+
+            const newCounter = {
+                id: Date.now(),
+                name: name,
+                staffId: staffId,
+                currentToken: null,
+                serviceIds: State.services.map(s => s.id) // Default to all services for now
+            };
+
+            State.counters.push(newCounter);
+            State.save();
+            e.target.reset();
+            updateDashboard();
+        });
+
+
+
+        // Add Priority
+        document.getElementById('add-priority-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const name = document.getElementById('new-priority-name').value;
+            const weight = parseInt(document.getElementById('new-priority-weight').value);
+            const id = name.toLowerCase().replace(/\s+/g, '-');
+
+            // Check duplicate
+            if (State.priorities.find(p => p.id === id || p.weight === weight)) {
+                alert("Priority Name or Weight already exists!");
+                return;
             }
 
-            // Add Counter
-            document.getElementById('add-counter-form').addEventListener('submit', (e) => {
-                e.preventDefault();
-                const name = document.getElementById('new-counter-name').value;
-                const staffId = document.getElementById('new-counter-staff').value;
-
-                const newCounter = {
-                    id: Date.now(),
-                    name: name,
-                    staffId: staffId,
-                    currentToken: null,
-                    serviceIds: State.services.map(s => s.id) // Default to all services for now
-                };
-
-                State.counters.push(newCounter);
-                State.save();
-                e.target.reset();
-                updateDashboard();
-            });
-
-            // Add Service
-            document.getElementById('add-service-form').addEventListener('submit', (e) => {
-                e.preventDefault();
-                const name = document.getElementById('new-service-name').value;
-                const time = document.getElementById('new-service-time').value;
-                const prefix = document.getElementById('new-service-prefix').value.toUpperCase();
-                const id = prefix.toLowerCase() + Date.now().toString().slice(-4); // Unique ID
-
-                const newService = {
-                    id: id,
-                    name: name,
-                    avgTime: parseInt(time),
-                    prefix: prefix
-                };
-
-                State.services.push(newService);
-                State.save();
-                e.target.reset();
-                updateDashboard();
-            });
-
-            // Delete Handlers (Global scope for onclick)
-            window.deleteCounter = (id) => {
-                if (confirm('Delete this counter?')) {
-                    State.counters = State.counters.filter(c => c.id !== id);
-                    State.save();
-                    updateDashboard();
-                }
+            const newPriority = {
+                id: id,
+                name: name,
+                weight: weight,
+                active: true
             };
 
-            window.deleteService = (id) => {
-                if (confirm('Delete this service?')) {
-                    State.services = State.services.filter(s => s.id !== id);
-                    State.save();
-                    updateDashboard();
-                }
-            };
-
-            document.getElementById('reset-btn').addEventListener('click', () => {
-                if (confirm("Are you sure you want to clear all data? This cannot be undone.")) {
-                    localStorage.clear();
-                    location.reload();
-                }
-            });
-
-            document.getElementById('export-btn').addEventListener('click', () => {
-                alert("Exporting data to CSV...");
-            });
-
-            // Initial Load
+            State.priorities.push(newPriority);
+            State.save();
+            e.target.reset();
             updateDashboard();
-            setInterval(updateDashboard, 5000);
         });
+
+        // Delete Handlers (Global scope for onclick)
+        window.deleteCounter = (id) => {
+            if (confirm('Delete this counter?')) {
+                State.counters = State.counters.filter(c => c.id !== id);
+                State.save();
+                updateDashboard();
+            }
+        };
+
+        window.toggleStaff = (id, isActive) => {
+            const action = isActive ? 'Enable' : 'Disable';
+            if (confirm(`${action} this staff member ?`)) {
+                State.toggleStaffStatus(id, isActive);
+                updateDashboard();
+            }
+        };
+
+
+
+        window.deletePriority = (id) => {
+            // Block deleting default priorities if needed, for now allow but maybe warn
+            if (id === 'normal') {
+                alert("Cannot delete 'Normal' priority.");
+                return;
+            }
+            if (confirm('Delete this priority level?')) {
+                State.priorities = State.priorities.filter(p => p.id !== id);
+                State.save();
+                updateDashboard();
+            }
+        };
+
+        document.getElementById('reset-btn').addEventListener('click', () => {
+            if (confirm("Are you sure you want to clear all data? This cannot be undone.")) {
+                localStorage.clear();
+                location.reload();
+            }
+        });
+
+        document.getElementById('export-btn').addEventListener('click', () => {
+            alert("Exporting data to CSV...");
+        });
+
+        // Settings Form
+        const settingsForm = document.getElementById('settings-form');
+        if (settingsForm) {
+            // Load initial value
+            document.getElementById('initial-buffer').value = State.settings.initialBuffer || 10;
+
+            settingsForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const buffer = parseInt(document.getElementById('initial-buffer').value);
+                if (!isNaN(buffer)) {
+                    State.updateSettings({ initialBuffer: buffer });
+                    alert("Settings saved!");
+                }
+            });
+        }
+
+
     </script>
 </body>
 

@@ -3,10 +3,16 @@
 const State = {
     // Default Data
     defaultServices: [
-        { id: 'c1', name: 'Counter 1', avgTime: 5, prefix: 'A' },
-        { id: 'c2', name: 'Counter 2', avgTime: 5, prefix: 'B' },
-        { id: 'c3', name: 'Counter 3', avgTime: 5, prefix: 'C' },
-        { id: 'c4', name: 'Counter 4', avgTime: 5, prefix: 'D' }
+        { id: 'c1', name: 'Counter 1', avgTime: 10, prefix: 'A' },
+        { id: 'c2', name: 'Counter 2', avgTime: 10, prefix: 'B' },
+        { id: 'c3', name: 'Counter 3', avgTime: 10, prefix: 'C' },
+        { id: 'c4', name: 'Counter 4', avgTime: 10, prefix: 'D' }
+    ],
+
+    defaultPriorities: [
+        { id: 'disabled', name: 'Differently Abled', weight: 3, active: true },
+        { id: 'senior', name: 'Senior Citizens', weight: 2, active: true },
+        { id: 'normal', name: 'Normal', weight: 1, active: true }
     ],
 
     defaultCounters: [
@@ -20,8 +26,13 @@ const State = {
     services: [],
     counters: [],
     tokens: [],
+    priorities: [],
     users: [],
     currentUser: null,
+    systemStatus: 'CLOSED', // OPEN or CLOSED
+    settings: {
+        initialBuffer: 10 // Minutes
+    },
 
     // Initialization
     init() {
@@ -31,9 +42,12 @@ const State = {
     },
 
     load() {
-        // Load or Initialize Services
         const storedServices = localStorage.getItem('nq_services');
         this.services = storedServices ? JSON.parse(storedServices) : [...this.defaultServices];
+
+        // Load or Initialize Priorities
+        const storedPriorities = localStorage.getItem('nq_priorities');
+        this.priorities = storedPriorities ? JSON.parse(storedPriorities) : [...this.defaultPriorities];
 
         // Load or Initialize Counters
         const storedCounters = localStorage.getItem('nq_counters');
@@ -51,12 +65,30 @@ const State = {
         const storedUser = localStorage.getItem('nq_user');
         this.currentUser = storedUser ? JSON.parse(storedUser) : null;
 
+        // Load System Status
+        const storedStatus = localStorage.getItem('nq_system_status');
+        this.systemStatus = storedStatus || 'CLOSED';
+
+        // Load Settings
+        const storedSettings = localStorage.getItem('nq_settings');
+        if (storedSettings) {
+            this.settings = JSON.parse(storedSettings);
+        }
+
         // Save defaults if first run
         if (!storedServices) this.save();
     },
 
     patchData() {
         let changed = false;
+
+        // Fix: Enforce avgTime = 10 for all services
+        this.services.forEach(s => {
+            if (s.avgTime !== 10) {
+                s.avgTime = 10;
+                changed = true;
+            }
+        });
 
         // Ensure all default services exist and are in order
         this.defaultServices.forEach(defService => {
@@ -67,6 +99,23 @@ const State = {
         });
         // Sort services to ensure sequential flow c1->c2->c3->c4
         this.services.sort((a, b) => a.id.localeCompare(b.id));
+
+        // Ensure Default Staff Users Exist
+        const defaultStaff = ['staff', 'staff2', 'staff3', 'staff4'];
+        defaultStaff.forEach(username => {
+            if (!this.users.find(u => u.username === username)) {
+                this.users.push({
+                    id: Date.now().toString() + Math.random(),
+                    username: username,
+                    password: username,
+                    role: 'staff',
+                    name: `Staff Member (${username})`,
+                    active: true,
+                    createdAt: Date.now()
+                });
+                changed = true;
+            }
+        });
 
         // Ensure all default counters are correctly configured
         this.defaultCounters.forEach(defCounter => {
@@ -88,6 +137,7 @@ const State = {
             }
         });
 
+
         if (changed) {
             console.log("System data patched to match new configuration.");
             this.save();
@@ -99,12 +149,15 @@ const State = {
         localStorage.setItem('nq_counters', JSON.stringify(this.counters));
         localStorage.setItem('nq_tokens', JSON.stringify(this.tokens));
         localStorage.setItem('nq_users', JSON.stringify(this.users));
+        localStorage.setItem('nq_priorities', JSON.stringify(this.priorities));
 
         if (this.currentUser) {
             localStorage.setItem('nq_user', JSON.stringify(this.currentUser));
         } else {
             localStorage.removeItem('nq_user');
         }
+        localStorage.setItem('nq_system_status', this.systemStatus);
+        localStorage.setItem('nq_settings', JSON.stringify(this.settings));
     },
 
     // Auth
@@ -119,6 +172,7 @@ const State = {
             password, // In a real app, this should be hashed!
             phone,
             role,
+            active: true, // Default active
             createdAt: Date.now()
         };
 
@@ -197,10 +251,39 @@ const State = {
 
     // Core Logic
     generateToken(serviceId, priority, phone) {
+        if (this.systemStatus === 'CLOSED') {
+            return { error: "System is currrently CLOSED. Tokens cannot be generated." };
+        }
+
         const service = this.services.find(s => s.id === serviceId);
         // Count tokens for this service today (simplified: all time for prototype)
         const count = this.tokens.filter(t => t.serviceId === serviceId).length + 1;
         const tokenNumber = `${service.prefix}-${100 + count}`;
+
+        // Expected Time Calculation
+        let expectedTime = Date.now();
+        const waitingTokens = this.tokens.filter(t => t.serviceId === serviceId && t.status === 'waiting');
+
+        if (waitingTokens.length === 0) {
+            // First token: Current Time + Buffer (Configurable)
+            expectedTime = Date.now() + (this.settings.initialBuffer * 60 * 1000);
+        } else {
+            // Subsequent: Last token expected time + Avg Service Time
+            // Find the last waiting token (or we should check the absolute last token?)
+            // Requirement says "last token expected time".
+            // Let's look at the VERY last token generated for this service, regardless of status?
+            // "If token is not first: Expected call time = last token expected time + average service time"
+            // We should use the last token added to the array for this service.
+            const serviceTokens = this.tokens.filter(t => t.serviceId === serviceId);
+            const lastToken = serviceTokens[serviceTokens.length - 1]; // Since we push, this is the last one.
+
+            if (lastToken && lastToken.expectedTime) {
+                expectedTime = lastToken.expectedTime + (service.avgTime * 60 * 1000);
+            } else {
+                // Fallback if last token has no expected time (legacy)
+                expectedTime = Date.now() + (waitingTokens.length * service.avgTime * 60 * 1000);
+            }
+        }
 
         const newToken = {
             id: Date.now().toString(),
@@ -210,6 +293,7 @@ const State = {
             phone: phone,
             status: 'waiting',
             createdAt: Date.now(),
+            expectedTime: expectedTime,
             userId: this.currentUser ? this.currentUser.id : null
         };
 
@@ -218,23 +302,47 @@ const State = {
         return newToken;
     },
 
-    calculateWaitTime(serviceId, tokenId = null) {
+    calculateWaitTime(serviceId, tokenId = null, priorityToCheck = 'normal') {
         const service = this.services.find(s => s.id === serviceId);
         if (!service) return 0;
 
-        let tokensAhead = 0;
-        const waitingTokens = this.tokens.filter(t => t.serviceId === serviceId && t.status === 'waiting');
-
+        // If specific token, use its expected (scheduled) time
         if (tokenId) {
-            // If we have a specific token, count only those created BEFORE it
             const myToken = this.tokens.find(t => t.id === tokenId);
-            if (myToken) {
-                tokensAhead = waitingTokens.filter(t => t.createdAt < myToken.createdAt).length;
+            if (myToken && myToken.expectedTime) {
+                const waitMs = myToken.expectedTime - Date.now();
+                return Math.max(0, Math.ceil(waitMs / 60000));
             }
-        } else {
-            // If no token (checking before generating), count everyone
-            tokensAhead = waitingTokens.length;
         }
+
+        // If estimating for new token
+        const waitingTokens = this.tokens.filter(t => t.serviceId === serviceId && t.status === 'waiting');
+        if (waitingTokens.length === 0) {
+            // If empty, wait is the Initial Buffer
+            return this.settings.initialBuffer; // 10 mins
+        }
+
+        // Otherwise estimate based strictly on count (fallback logic or "Last Token + Service")
+        // But since we want to align with generateToken logic:
+        // Estimate = (Last Token Expected - Now) + AvgTime
+        const serviceTokens = this.tokens.filter(t => t.serviceId === serviceId);
+        const lastToken = serviceTokens[serviceTokens.length - 1];
+        if (lastToken && lastToken.expectedTime) {
+            const nextTime = lastToken.expectedTime + (service.avgTime * 60 * 1000);
+            return Math.max(0, Math.ceil((nextTime - Date.now()) / 60000));
+        }
+
+        // Fallback (Legacy)
+        let tokensAhead = 0;
+        const getWeight = (pid) => {
+            const p = this.priorities.find(p => p.id === pid);
+            return p ? p.weight : 0;
+        };
+        const checkId = priorityToCheck || 'normal';
+        const myWeight = getWeight(checkId);
+        waitingTokens.forEach(t => {
+            if (getWeight(t.priority) >= myWeight) tokensAhead++;
+        });
 
         const countersForService = this.counters.filter(c => c.serviceIds.includes(serviceId)).length || 1;
         return Math.ceil((tokensAhead * service.avgTime) / countersForService);
@@ -252,14 +360,18 @@ const State = {
             counter.serviceIds.includes(t.serviceId) && t.status === 'waiting'
         );
 
-        // Priority logic: Disabled > Senior > Normal
-        const disabled = relevantTokens.find(t => t.priority === 'disabled');
-        if (disabled) return disabled;
+        if (relevantTokens.length === 0) return null;
 
-        const senior = relevantTokens.find(t => t.priority === 'senior');
-        if (senior) return senior;
+        // Dynamic Sort by Priority Weight (Descending) then Creation Time (Ascending)
+        relevantTokens.sort((a, b) => {
+            const wA = this.priorities.find(p => p.id === a.priority)?.weight || 0;
+            const wB = this.priorities.find(p => p.id === b.priority)?.weight || 0;
 
-        return relevantTokens[0] || null;
+            if (wA !== wB) return wB - wA; // Higher weight first
+            return a.createdAt - b.createdAt; // FIFO
+        });
+
+        return relevantTokens[0];
     },
 
     callToken(counterId, tokenId) {
@@ -268,6 +380,7 @@ const State = {
 
         if (token && counter) {
             token.status = 'called';
+            // token.calledAt = Date.now(); // Removed as per request
             counter.currentToken = token;
             this.save();
             return true;
@@ -292,6 +405,10 @@ const State = {
 
                     token.serviceId = nextService.id;
                     token.status = 'waiting';
+                    // Re-calculate expected time for next service?
+                    // Ideally yes, but basic requirement just says for generation. 
+                    // We'll leave it simple or reset it? Let's leave it.
+
                     counter.currentToken = null;
                     this.save();
                     return { success: true, action: 'transferred', target: nextService.name };
@@ -306,6 +423,45 @@ const State = {
             }
         }
         return { success: false };
+    },
+
+    skipToken(counterId) {
+        const counter = this.counters.find(c => c.id == counterId);
+        if (counter && counter.currentToken) {
+            const token = this.tokens.find(t => t.id === counter.currentToken.id);
+            if (token) {
+                token.status = 'skipped';
+                counter.currentToken = null;
+                this.save();
+                return { success: true };
+            }
+        }
+        return { success: false };
+    },
+
+    // System Management
+    setSystemStatus(status) {
+        this.systemStatus = status; // 'OPEN' or 'CLOSED'
+        this.save();
+    },
+
+    toggleStaffStatus(userId, isActive) {
+        const user = this.users.find(u => u.id === userId || u.username === userId);
+        if (user) {
+            user.active = isActive;
+            this.save();
+            return true;
+        }
+        return false;
+    },
+
+    getActiveStaff() {
+        return this.users.filter(u => u.role === 'staff' && (u.active !== false)); // Default true if undefined
+    },
+
+    updateSettings(newSettings) {
+        this.settings = { ...this.settings, ...newSettings };
+        this.save();
     },
 
     transferToken(counterId, targetServiceId) {
